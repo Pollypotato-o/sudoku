@@ -3,77 +3,142 @@
  * Возвращает игровое поле после попытки его решить.
  * Договорись со своей командой, в каком формате возвращать этот результат.
  */
-function solve(boardString) {
-  let arrPuzzle = [
-    (puzzle_1 = boardString.slice(0, 9).split('')),
-    (puzzle_2 = boardString.slice(9, 18).split('')),
-    (puzzle_3 = boardString.slice(18, 27).split('')),
-    (puzzle_4 = boardString.slice(27, 36).split('')),
-    (puzzle_5 = boardString.slice(36, 45).split('')),
-    (puzzle_6 = boardString.slice(45, 54).split('')),
-    (puzzle_7 = boardString.slice(54, 63).split('')),
-    (puzzle_8 = boardString.slice(63, 72).split('')),
-    (puzzle_9 = boardString.slice(72, 81).split('')),
-  ];
-  const size = arrPuzzle.length;
-  const box = 3;
-  function tireFound(arrPuzzle) {
-    for (i = 0; i < arrPuzzle.length; i += 1) {
-      for (j = 0; j < arrPuzzle[i].length; j += 1) {
-        if (arrPuzzle[i][j] === '-') {
-          return [i, j];
+function solve(string) {
+  const arrBoard = stringToArr(string);
+
+  step = () => {
+    const size = 9;
+    const boxSize = 3;
+    const currPos = findEmptySpace(arrBoard);
+    if (currPos === null) {
+      return true;
+    }
+    for (let num = 1; num <= size; num++) {
+      const isValid = validate(currPos, arrBoard, num, (sizeBox = boxSize));
+      if (isValid) {
+        const [y, x] = currPos;
+        arrBoard[y][x] = String(num);
+        if (step()) {
+          return true;
         }
+        arrBoard[y][x] = "-";
       }
     }
-    return null;
-  }
-
-  const letChecking = (num, pos, arrPuzzle) => {
-    const [i, j] = pos;
-
-    for (let x = 0; x < arrPuzzle.length; x += 1) {
-      if (arrPuzzle[x][j] === num && x !== i) {
-        return false;
-      }
-    }
-
-    for (let x = 0; x < arrPuzzle.length; x += 1) {
-      if (arrPuzzle[i][x] === num && x !== j) {
-        return false;
-      }
-    }
-
-    const boxLine = Math.floor(i / box) * box;
-    const boxColumn = Math.floor(j / box) * box;
-
-    for (let k = boxLine; k < boxLine + box; k++) {
-      for (let l = boxColumn; k < boxColumn + box; l++) {
-        if (arrPuzzle[k][l] === num && k !== i && l !== j) {
-          return false;
-        }
-      }
-    }
-    return true;
+    return false;
   };
-  console.log(boxLine);
+  step();
+  return arrBoard;
 }
-
-
-
 /**
- * Принимает игровое поле в том формате, в котором его вернули из функции solve.
+ * Принимает игровое поле в том формате, в котором его вернули из функции step.
  * Возвращает булевое значение — решено это игровое поле или нет.
  */
-function isSolved(board) {}
+function isSolved(arrBoard) {
+  arrBoard.every((line) => {
+    if (line.reduce((a, b) => a + Number(b), 0) !== 45) return false;
+  });
+
+  for (let i = 0; i < arrBoard.length; i++) {
+    const result = [];
+
+    for (let j = 0; j < arrBoard.length; j++) {
+      result.push(arrBoard[j][i]);
+    }
+
+    if (result.reduce((a, b) => a + Number(b), 0) !== 45) {
+      return false;
+    }
+  }
+
+  if (
+    arrToString(arrBoard)
+      .split("")
+      .reduce((a, b) => a + Number(b), 0) !== 405
+  ) {
+    return false;
+  }
+  return true;
+}
 
 /**
  * Принимает игровое поле в том формате, в котором его вернули из функции solve.
  * Возвращает строку с игровым полем для последующего вывода в консоль.
  * Подумай, как симпатичнее сформировать эту строку.
  */
-function prettyBoard(board) {}
+function prettyBoard(board) {
+  const stringBoard = arrToString(board);
+  let result = stringBoard.match(/.{9}/g).map((el) => {
+    el = el.split("");
+    el.unshift("|");
+    el.push("|");
+    el.splice(4, 0, "|");
+    el.splice(8, 0, "|");
+    return el;
+  });
+  const border = "----{}-------{}-------{}";
+  result = result.map((el) => el.join(" "));
+  result.unshift(border);
+  result.push(border);
+  result.splice(4, 0, border);
+  result.splice(8, 0, border);
+  return result.join("\n");
+}
 
-// Экспортировать функции для использования в другом файле (например, readAndSolve.js).
+function stringToArr(boardString) {
+  const re = /.{9}/g;
+  return boardString.match(re).map((line) => {
+    return line.split("");
+  });
+}
+
+function findEmptySpace(arrBoard) {
+  for (let y = 0; y < 9; y++) {
+    for (let x = 0; x < 9; x++) {
+      if (arrBoard[y][x] === "-") {
+        return [y, x];
+      }
+    }
+  }
+  return null;
+}
+
+function validate(currPos, arrBoard, num, boxSize) {
+  const [y, x] = currPos;
+
+  for (let i = 0; i < arrBoard.length; i++) {
+    if (Number(arrBoard[y][i]) === num && i !== x) {
+      return false;
+    }
+  }
+
+  for (let i = 0; i < arrBoard.length; i++) {
+    if (Number(arrBoard[i][x]) === num && i !== y) {
+      return false;
+    }
+  }
+
+  const firstBlockOfBoxY = Math.floor(y / boxSize) * boxSize;
+  const firstBlockOfBoxX = Math.floor(x / boxSize) * boxSize;
+
+  for (let i = firstBlockOfBoxY; i < boxSize + firstBlockOfBoxY; i++) {
+    for (let j = firstBlockOfBoxX; j < boxSize + firstBlockOfBoxX; j++) {
+      if (arrBoard[i][j] == num && i !== y && j !== x) {
+        return false;
+      }
+    }
+  }
+  return true;
+}
+function arrToString(stepdBoardArr) {
+  return stepdBoardArr
+    .map((line) => {
+      return line.join("");
+    })
+    .join("");
+}
+
+// Экспортировать функции для использования в другом файле (например, readAndstep.js).
+
 module.exports = {
   solve,
   isSolved,
