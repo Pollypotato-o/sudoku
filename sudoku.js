@@ -3,6 +3,7 @@
  * Возвращает игровое поле после попытки его решить.
  * Договорись со своей командой, в каком формате возвращать этот результат.
  */
+
 const size = 9;
 const boxSize = 3;
 function solve(string) {
@@ -37,8 +38,41 @@ function findEmptySpace(arrBoard) {
       }
     }
   }
+
   return null;
+
+  const letChecking = (num, pos, arrPuzzle) => {
+    const [i, j] = pos;
+
+    for (let x = 0; x < arrPuzzle.length; x += 1) {
+      if (arrPuzzle[x][j] === num && x !== i) {
+        return false;
+      }
+    }
+
+    for (let x = 0; x < arrPuzzle.length; x += 1) {
+      if (arrPuzzle[i][x] === num && x !== j) {
+        return false;
+      }
+    }
+
+    const boxLine = Math.floor(i / box) * box;
+    const boxColumn = Math.floor(j / box) * box;
+
+    for (let k = boxLine; k < boxLine + box; k++) {
+      for (let l = boxColumn; k < boxColumn + box; l++) {
+        if (arrPuzzle[k][l] === num && k !== i && l !== j) {
+          return false;
+        }
+      }
+    }
+    return true;
+  };
+  console.log(boxLine);
 }
+
+
+
 /**
  * Принимает игровое поле в том формате, в котором его вернули из функции solve.
  * Возвращает булевое значение — решено это игровое поле или нет.
